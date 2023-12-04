@@ -13,18 +13,18 @@ class DBHelper(context: Context?) : SQLiteOpenHelper(context, "BookManager.db", 
                 title TEXT NOT NULL,
                 author TEXT NOT NULL default '',
                 publisher TEXT NOT NULL default '',
-                description TEXT NOT NULL default ''
+                description TEXT NOT NULL default '',
+                start_at TEXT NOT NULL default(date('now','localtime')),
+                end_at TEXT NOT NULL default ""
             );
         """.trimIndent()
-
         db.execSQL(sql)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-//        val sql : String = "DROP TABLE if exists mytable"
-//
-//        db.execSQL(sql)
-//        onCreate(db)
+        val sql = "DROP TABLE IF EXISTS Book"
+        db.execSQL(sql)
+        onCreate(db)
     }
 
 }

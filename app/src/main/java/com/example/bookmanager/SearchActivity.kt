@@ -14,51 +14,59 @@ import com.example.bookmanager.databinding.ActivitySearchBinding
 import org.json.JSONObject
 
 class SearchActivity : AppCompatActivity() {
+    private lateinit var binding: ActivitySearchBinding
+    private val urlFormat = "https://openapi.naver.com/v1/search/book_adv.json?display=100&start=1&d_titl=%s"
+    private val clientId = "Sy7wWmpc1VDCpaeaxkDd"
+    private val clientSecret = "tj4rG7jxJl"
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        var binding = ActivitySearchBinding.inflate(getLayoutInflater())
+        binding = ActivitySearchBinding.inflate(getLayoutInflater())
         setContentView(binding.root)
 
         // 뒤로 가기 버튼
-        binding.btnHome.setOnClickListener{
-            Log.d("test", "뒤로 가기")
-            finish()
-        }
+        binding.btnHome.setOnClickListener{ finish() }
         // 검색창
         binding.inputSearch.setOnQueryTextListener(object : SearchView.OnQueryTextListener{
             override fun onQueryTextSubmit(query: String?): Boolean {
-                val url = "https://openapi.naver.com/v1/search/book_adv.json?display=100&start=1&d_titl=${query}"
+                val url = urlFormat.format(query)
                 val jsonRequest = object: JsonObjectRequest(
-                    Request.Method.GET,
+                    Method.GET,
                     url,
                     null,
                     { response ->
-                        val bookList = arrayListOf<Book>()
-                        val items = response.getJSONArray("items")
-                        for(i in 0 until items.length()){
-                            val item = items[i] as JSONObject
+                        val bookList = arrayListOf<Book>().also{
+                            val items = response.getJSONArray("items")
+                            for(i in 0 until items.length()){
+                                val item = items[i] as JSONObject
 
-                            bookList.add(Book(
-                                item.getLong("isbn"),
-                                item.getString("image"),
-                                item.getString("title"),
-                                item.getString("author"),
-                                item.getString("publisher"),
-                                item.getString("description")
-                            ))
+                                it.add(Book(
+                                    item.getLong("isbn"),
+                                    item.getString("image"),
+                                    item.getString("title"),
+                                    item.getString("author"),
+                                    item.getString("publisher"),
+                                    item.getString("description")
+                                ))
+                            }
                         }
 
                         binding.booklist.adapter = BookInfoAdapter(this@SearchActivity, bookList)
                         binding.booklist.onItemClickListener = AdapterView.OnItemClickListener {
                                 parent, view, position, id ->
                             val selectedBook = parent.getItemAtPosition(position) as Book
-                            var intent = Intent(this@SearchActivity, BookInfoActivity::class.java)
-                            intent.putExtra("isbn", selectedBook.isbn)
-                            intent.putExtra("thumbnail", selectedBook.thumbnail)
-                            intent.putExtra("title", selectedBook.title)
-                            intent.putExtra("author", selectedBook.author)
-                            intent.putExtra("publisher", selectedBook.publisher)
-                            intent.putExtra("description", selectedBook.description)
+
+                            var intent = Intent(this@SearchActivity, BookInfoActivity::class.java).also{
+                                it.putExtra("mode", "Register")
+                                it.putExtra("isbn", selectedBook.isbn)
+                                it.putExtra("thumbnail", selectedBook.thumbnail)
+                                it.putExtra("title", selectedBook.title)
+                                it.putExtra("author", selectedBook.author)
+                                it.putExtra("publisher", selectedBook.publisher)
+                                it.putExtra("description", selectedBook.description)
+                                it.putExtra("start_at", "")
+                                it.putExtra("end_at", "")
+                            }
                             startActivity(intent)
                         }
                     },
@@ -66,8 +74,8 @@ class SearchActivity : AppCompatActivity() {
                 ){
                     override fun getHeaders(): MutableMap<String, String> {
                         val headers = HashMap<String, String>()
-                        headers["X-Naver-Client-Id"] = "Sy7wWmpc1VDCpaeaxkDd"
-                        headers["X-Naver-Client-Secret"] = "tj4rG7jxJl"
+                        headers["X-Naver-Client-Id"] = clientId
+                        headers["X-Naver-Client-Secret"] = clientSecret
                         return headers
                     }
                 }
