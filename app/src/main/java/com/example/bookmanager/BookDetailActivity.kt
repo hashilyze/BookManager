@@ -24,8 +24,15 @@ class BookDetailActivity : AppCompatActivity() {
         setContentView(binding.root)
         database = DBHelper(this).writableDatabase // DB
 
-        // Extra Data
-        val mode = intent.getStringExtra("mode")
+        val action = intent.getStringExtra("action") ?: ""
+        if(!"(Register|Manager)".toRegex().matches(action)){
+            Log.e("BookManager", "Not Implemented BookDetail's action")
+            Toast.makeText(this, "잘못된 접근입니다.", Toast.LENGTH_SHORT)
+            finish()
+            return
+        }
+
+        // 도서 정보
         val isbn = intent.getLongExtra("isbn", 0L)
         val thumbnail = intent.getStringExtra("thumbnail")
         val title = intent.getStringExtra("title")
@@ -33,27 +40,24 @@ class BookDetailActivity : AppCompatActivity() {
         val publisher = intent.getStringExtra("publisher")
         val description = intent.getStringExtra("description")
 
-        // === Header Navigation-Right ===
+        // === Common Interface ===
         // 뒤로 가기
         binding.btnBack.setOnClickListener{ finish() }
 
         // === Context Menu ===
         // 책 정보 보기
-        binding.btnInfo.setOnClickListener{
-            binding.groupInfo.visibility = View.VISIBLE
-            binding.groupMgr.visibility = View.GONE
-        }
+        binding.btnInfo.setOnClickListener{ openBookInfoTab() }
         // 독서 활동 보기
-        binding.btnMgr.setOnClickListener{
-            binding.groupInfo.visibility = View.GONE
-            binding.groupMgr.visibility = View.VISIBLE
-        }
-        if(mode.equals("Register")) {
-            binding.btnMgr.visibility = View.GONE
+        binding.btnMgr.setOnClickListener{ openBookMgrTab() }
+        binding.btnMgr.visibility = if(action == "Register"){ View.GONE } else { View.VISIBLE }
+        openBookInfoTab()
+
+        // === Header Navigation ====
+        if(action.equals("Register")){
+            openBookRegisterMenu()
         } else{
-            binding.btnMgr.visibility = View.VISIBLE
+            openBookManagerMenu()
         }
-        binding.btnInfo.callOnClick()
 
         // === 책 정보 표시 ===
         Glide.with(this)
@@ -67,25 +71,16 @@ class BookDetailActivity : AppCompatActivity() {
         binding.txtPublisher.text = publisher
         binding.txtDescription.text = description
 
-        // === Header Natigation-Left ====
-        if(mode.equals("Register")){
-            binding.menuRegister.visibility = View.VISIBLE
-            binding.menuManager.visibility = View.GONE
-        } else{
-            binding.menuRegister.visibility = View.GONE
-            binding.menuManager.visibility = View.VISIBLE
-        }
-        if(mode.equals("Register")){
+        if(action.equals("Register")){
             // 등록하기
             binding.btnRegister.setOnClickListener{
                 val registerSql = """
                 INSERT OR IGNORE INTO Book(isbn, thumbnail, title, author, publisher, description) 
-                VALUES 
-                (?, ?, ?, ?, ?, ?);
+                VALUES (?, ?, ?, ?, ?, ?);
                 """.trimIndent()
                 val uniqueCheckSql = "SELECT isbn FROM Book WHERE isbn = ?"
 
-                val registerVals = arrayOf(
+                val registerParams = arrayOf(
                     isbn,
                     thumbnail,
                     title,
@@ -93,14 +88,14 @@ class BookDetailActivity : AppCompatActivity() {
                     publisher,
                     description
                 )
-                val uniqueCheckVals = arrayOf(isbn.toString())
+                val uniqueCheckParams = arrayOf(isbn.toString())
 
                 try{
-                    val cursor = database.rawQuery(uniqueCheckSql, uniqueCheckVals)
+                    val cursor = database.rawQuery(uniqueCheckSql, uniqueCheckParams)
                     if(cursor.moveToNext()) {
                         Toast.makeText(this, "이미 등록된 책입니다.", Toast.LENGTH_SHORT).show()
                     } else{
-                        database.execSQL(registerSql, registerVals)
+                        database.execSQL(registerSql, registerParams)
                         Toast.makeText(this, "책이 등록되었습니다.", Toast.LENGTH_SHORT).show()
                     }
                 }catch(error: SQLiteException){
@@ -108,12 +103,12 @@ class BookDetailActivity : AppCompatActivity() {
                     Toast.makeText(this, "책을 등록할 수 없습니다.", Toast.LENGTH_SHORT).show()
                 }
             }
-        } else if(mode.equals("Manager")){
+        } else if(action.equals("Manager")){
             // 서재에서 제거하기
             binding.btnDelete.setOnClickListener{
-                val sql = "DELETE FROM Book WHERE isbn = ?"
-                val vals = arrayOf(isbn.toString())
-                database.execSQL(sql, vals)
+                val deleteSql = "DELETE FROM Book WHERE isbn = ?"
+                val deleteParams = arrayOf(isbn.toString())
+                database.execSQL(deleteSql, deleteParams)
                 finish()
             }
             // 메모 목록 화면으로 이동
@@ -141,26 +136,40 @@ class BookDetailActivity : AppCompatActivity() {
             reloadDays(start_at, end_at)
 
             // 독서 종료/재개
-            binding.btnBreak.text = if(end_at.equals("")) {
-                "독서 종료"
-            } else{
-                "독서 재개"
-            }
+            binding.btnBreak.text = if(end_at.equals("")) { "독서 종료" } else{ "독서 재개" }
             binding.btnBreak.setOnClickListener{
-                val vals = arrayOf(isbn.toString())
+                val updateParams = arrayOf(isbn.toString())
                 if(binding.btnBreak.text == "독서 종료"){
                     binding.btnBreak.text = "독서 재개"
-                    val sql = "UPDATE Book SET end_at = date('now','localtime') WHERE isbn = ?"
-                    database.execSQL(sql, vals)
+                    val updateSql = "UPDATE Book SET end_at = date('now','localtime') WHERE isbn = ?"
+                    database.execSQL(updateSql, updateParams)
                     reloadDays(start_at, LocalDate.now().toString())
                 } else{
                     binding.btnBreak.text = "독서 종료"
-                    val sql = "UPDATE Book SET end_at = '' WHERE isbn = ?"
-                    database.execSQL(sql, vals)
+                    val updateSql = "UPDATE Book SET end_at = '' WHERE isbn = ?"
+                    database.execSQL(updateSql, updateParams)
                     reloadDays(start_at, "")
                 }
             }
 
         }
+    }
+
+    fun openBookInfoTab(){
+        binding.groupInfo.visibility = View.VISIBLE
+        binding.groupMgr.visibility = View.GONE
+    }
+    fun openBookMgrTab(){
+        binding.groupInfo.visibility = View.GONE
+        binding.groupMgr.visibility = View.VISIBLE
+    }
+
+    fun openBookRegisterMenu(){
+        binding.menuRegister.visibility = View.VISIBLE
+        binding.menuManager.visibility = View.GONE
+    }
+    fun openBookManagerMenu(){
+        binding.menuRegister.visibility = View.GONE
+        binding.menuManager.visibility = View.VISIBLE
     }
 }

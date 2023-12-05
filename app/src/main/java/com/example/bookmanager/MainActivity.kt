@@ -63,7 +63,7 @@ class MainActivity : AppCompatActivity() {
             val selectedBook = parent.getItemAtPosition(position) as Book
 
             var intent = Intent(this@MainActivity, BookDetailActivity::class.java).also{
-                it.putExtra("mode", "Manager")
+                it.putExtra("action", "Manager")
                 it.putExtra("isbn", selectedBook.isbn)
                 it.putExtra("thumbnail", selectedBook.thumbnail)
                 it.putExtra("title", selectedBook.title)

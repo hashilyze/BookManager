@@ -55,7 +55,7 @@ class SearchActivity : AppCompatActivity() {
                             val selectedBook = parent.getItemAtPosition(position) as Book
 
                             var intent = Intent(this@SearchActivity, BookDetailActivity::class.java).also{
-                                it.putExtra("mode", "Register")
+                                it.putExtra("action", "Register")
                                 it.putExtra("isbn", selectedBook.isbn)
                                 it.putExtra("thumbnail", selectedBook.thumbnail)
                                 it.putExtra("title", selectedBook.title)
