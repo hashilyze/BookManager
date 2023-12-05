@@ -3,10 +3,11 @@ package com.example.bookmanager
 import android.content.Context
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
+import android.util.Log
 
 class DBHelper(context: Context?) : SQLiteOpenHelper(context, "BookManager.db", null, 1) {
     override fun onCreate(db: SQLiteDatabase) {
-        var sql : String ="""
+        val bookSql : String ="""
             CREATE TABLE IF NOT EXISTS Book(
                 isbn INTEGER PRIMARY KEY,
                 thumbnail TEXT,
@@ -18,13 +19,29 @@ class DBHelper(context: Context?) : SQLiteOpenHelper(context, "BookManager.db", 
                 end_at TEXT NOT NULL default ""
             );
         """.trimIndent()
-        db.execSQL(sql)
+        val memoSql : String ="""
+            CREATE TABLE IF NOT EXISTS Memo(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                isbn INTEGER,
+                title TEXT NOT NULL default '',
+                contents TEXT NOT NULL default '',
+                updated_at TEXT NOT NULL default(date('now','localtime'))
+            );
+        """.trimIndent()
+
+        db.execSQL(bookSql)
+        db.execSQL(memoSql)
+        Log.d("BookManager", "Created Database")
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        val sql = "DROP TABLE IF EXISTS Book"
-        db.execSQL(sql)
+        val bookSql = "DROP TABLE IF EXISTS Book"
+        val memoSql = "DROP TABLE IF EXISTS Memo"
+
+        db.execSQL(bookSql)
+        db.execSQL(memoSql)
         onCreate(db)
+        Log.d("BookManager", "Updated Database")
     }
 
 }

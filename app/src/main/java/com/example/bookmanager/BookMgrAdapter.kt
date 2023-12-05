@@ -11,17 +11,9 @@ import android.widget.TextView
 import com.bumptech.glide.Glide
 
 class BookMgrAdapter(val context: Context, val bookList: ArrayList<Book>) : BaseAdapter() {
-    override fun getCount(): Int {
-        return bookList.size
-    }
-
-    override fun getItem(position: Int): Any {
-        return bookList[position]
-    }
-
-    override fun getItemId(position: Int): Long {
-        return bookList[position].isbn
-    }
+    override fun getCount(): Int = bookList.size
+    override fun getItem(position: Int): Any = bookList[position]
+    override fun getItemId(position: Int): Long = bookList[position].isbn
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
         val view: View = LayoutInflater.from(context).inflate(R.layout.book_mgr_item, null)
@@ -33,14 +25,12 @@ class BookMgrAdapter(val context: Context, val bookList: ArrayList<Book>) : Base
         val progress = view.findViewById<ProgressBar>(R.id.progressBar_page);
 
         val book = bookList[position]
-
         Glide.with(view)
             .load(book.thumbnail)
             .placeholder(R.drawable.book_icon)
             .fallback(R.drawable.book_icon)
             .error(R.drawable.book_icon)
             .into(thumbnail)
-//        thumbnail.setImageResource(book.thumbnail)
         title.text = book.title
         author.text = book.author
         isbn.text = book.isbn.toString()

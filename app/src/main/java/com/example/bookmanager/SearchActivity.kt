@@ -5,9 +5,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.widget.AdapterView
-import android.widget.Toast
 import androidx.appcompat.widget.SearchView
-import com.android.volley.Request
 import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import com.example.bookmanager.databinding.ActivitySearchBinding
@@ -56,7 +54,7 @@ class SearchActivity : AppCompatActivity() {
                                 parent, view, position, id ->
                             val selectedBook = parent.getItemAtPosition(position) as Book
 
-                            var intent = Intent(this@SearchActivity, BookInfoActivity::class.java).also{
+                            var intent = Intent(this@SearchActivity, BookDetailActivity::class.java).also{
                                 it.putExtra("mode", "Register")
                                 it.putExtra("isbn", selectedBook.isbn)
                                 it.putExtra("thumbnail", selectedBook.thumbnail)

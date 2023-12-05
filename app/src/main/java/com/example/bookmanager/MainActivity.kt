@@ -4,7 +4,6 @@ import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
 import android.widget.AdapterView
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
@@ -41,7 +40,7 @@ class MainActivity : AppCompatActivity() {
                 SELECT isbn, thumbnail, title, 
                     author, publisher, description, 
                     start_at, end_at
-                FROM BOOK
+                FROM Book
                 """.trimIndent()
             val cursor = database.rawQuery(sql, null)
             while(cursor.moveToNext()){
@@ -58,13 +57,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-
         binding.booklist.adapter = BookMgrAdapter(this, bookList)
         binding.booklist.onItemClickListener = AdapterView.OnItemClickListener {
                 parent, view, position, id ->
             val selectedBook = parent.getItemAtPosition(position) as Book
 
-            var intent = Intent(this@MainActivity, BookInfoActivity::class.java).also{
+            var intent = Intent(this@MainActivity, BookDetailActivity::class.java).also{
                 it.putExtra("mode", "Manager")
                 it.putExtra("isbn", selectedBook.isbn)
                 it.putExtra("thumbnail", selectedBook.thumbnail)

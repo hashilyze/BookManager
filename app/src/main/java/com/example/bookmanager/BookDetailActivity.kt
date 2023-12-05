@@ -1,5 +1,6 @@
 package com.example.bookmanager
 
+import android.content.Intent
 import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteException
 import androidx.appcompat.app.AppCompatActivity
@@ -8,21 +9,21 @@ import android.util.Log
 import android.view.View
 import android.widget.Toast
 import com.bumptech.glide.Glide
-import com.example.bookmanager.databinding.ActivityBookInfoBinding
+import com.example.bookmanager.databinding.ActivityBookDetailBinding
 import java.time.LocalDate
 import java.time.Period
 
 
-class BookInfoActivity : AppCompatActivity() {
-    private lateinit var binding: ActivityBookInfoBinding
+class BookDetailActivity : AppCompatActivity() {
+    private lateinit var binding: ActivityBookDetailBinding
     private lateinit var database: SQLiteDatabase
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        binding = ActivityBookInfoBinding.inflate(layoutInflater)
+        binding = ActivityBookDetailBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        // DB
-        database = DBHelper(this).writableDatabase
+        database = DBHelper(this).writableDatabase // DB
+
         // Extra Data
         val mode = intent.getStringExtra("mode")
         val isbn = intent.getLongExtra("isbn", 0L)
@@ -32,9 +33,11 @@ class BookInfoActivity : AppCompatActivity() {
         val publisher = intent.getStringExtra("publisher")
         val description = intent.getStringExtra("description")
 
-        // Common Interface
+        // === Header Navigation-Right ===
         // 뒤로 가기
         binding.btnBack.setOnClickListener{ finish() }
+
+        // === Context Menu ===
         // 책 정보 보기
         binding.btnInfo.setOnClickListener{
             binding.groupInfo.visibility = View.VISIBLE
@@ -45,7 +48,14 @@ class BookInfoActivity : AppCompatActivity() {
             binding.groupInfo.visibility = View.GONE
             binding.groupMgr.visibility = View.VISIBLE
         }
-        // 렌더
+        if(mode.equals("Register")) {
+            binding.btnMgr.visibility = View.GONE
+        } else{
+            binding.btnMgr.visibility = View.VISIBLE
+        }
+        binding.btnInfo.callOnClick()
+
+        // === 책 정보 표시 ===
         Glide.with(this)
             .load(thumbnail)
             .placeholder(R.drawable.book_icon)
@@ -57,25 +67,25 @@ class BookInfoActivity : AppCompatActivity() {
         binding.txtPublisher.text = publisher
         binding.txtDescription.text = description
 
-
+        // === Header Natigation-Left ====
         if(mode.equals("Register")){
-            // 메뉴 선택
             binding.menuRegister.visibility = View.VISIBLE
             binding.menuManager.visibility = View.GONE
-            // 독서 활동 비활성화
-            binding.btnMgr.visibility = View.GONE
-
-
+        } else{
+            binding.menuRegister.visibility = View.GONE
+            binding.menuManager.visibility = View.VISIBLE
+        }
+        if(mode.equals("Register")){
             // 등록하기
             binding.btnRegister.setOnClickListener{
-                val sqlRegister = """
+                val registerSql = """
                 INSERT OR IGNORE INTO Book(isbn, thumbnail, title, author, publisher, description) 
                 VALUES 
                 (?, ?, ?, ?, ?, ?);
                 """.trimIndent()
-                val sqlOverlapCheck = "SELECT isbn FROM Book WHERE isbn = ?"
+                val uniqueCheckSql = "SELECT isbn FROM Book WHERE isbn = ?"
 
-                val vals = arrayOf(
+                val registerVals = arrayOf(
                     isbn,
                     thumbnail,
                     title,
@@ -83,13 +93,14 @@ class BookInfoActivity : AppCompatActivity() {
                     publisher,
                     description
                 )
+                val uniqueCheckVals = arrayOf(isbn.toString())
 
                 try{
-                    val cursor = database.rawQuery(sqlOverlapCheck, arrayOf(isbn.toString()))
+                    val cursor = database.rawQuery(uniqueCheckSql, uniqueCheckVals)
                     if(cursor.moveToNext()) {
                         Toast.makeText(this, "이미 등록된 책입니다.", Toast.LENGTH_SHORT).show()
                     } else{
-                        database.execSQL(sqlRegister, vals)
+                        database.execSQL(registerSql, registerVals)
                         Toast.makeText(this, "책이 등록되었습니다.", Toast.LENGTH_SHORT).show()
                     }
                 }catch(error: SQLiteException){
@@ -98,12 +109,6 @@ class BookInfoActivity : AppCompatActivity() {
                 }
             }
         } else if(mode.equals("Manager")){
-            // 메뉴 선택
-            binding.menuRegister.visibility = View.GONE
-            binding.menuManager.visibility = View.VISIBLE
-            // 독서 활동 활성화
-            binding.btnMgr.visibility = View.VISIBLE
-
             // 서재에서 제거하기
             binding.btnDelete.setOnClickListener{
                 val sql = "DELETE FROM Book WHERE isbn = ?"
@@ -111,16 +116,21 @@ class BookInfoActivity : AppCompatActivity() {
                 database.execSQL(sql, vals)
                 finish()
             }
+            // 메모 목록 화면으로 이동
+            binding.btnMemo.setOnClickListener{
+                val intent = Intent(this, MemoListActivity::class.java)
+                intent.putExtra("isbn", isbn)
+                startActivity(intent)
+            }
 
-            // 독서 기간
-            var reloadDays = {
-                    start_at: String, end_at: String ->
-                val last_at = if(end_at.equals("")){
+            // 독서 기간 관리
+            var reloadDays = { start_at: String, end_at: String ->
+                val last_at = if(end_at == ""){
                     LocalDate.now()
                 } else{
                     LocalDate.parse(end_at)
                 }
-                val days = Period.between(last_at, LocalDate.parse(start_at)).days
+                val days = Period.between(LocalDate.parse(start_at), last_at).days
 
                 binding.txtDays.text = "${days}일"
                 binding.txtStartAt.text = start_at
@@ -150,6 +160,7 @@ class BookInfoActivity : AppCompatActivity() {
                     reloadDays(start_at, "")
                 }
             }
+
         }
     }
 }
