@@ -25,7 +25,7 @@ class MemoListActivity : AppCompatActivity() {
             loadLibrary()
         }
 
-        // 뒤로가기
+        // 뒤로 가기
         binding.btnBack.setOnClickListener{ finish() }
         // 메모 등록 화면으로 이동
         binding.btnMemoAdd.setOnClickListener{
@@ -39,15 +39,15 @@ class MemoListActivity : AppCompatActivity() {
 
     private fun loadLibrary(){
         val memoList = arrayListOf<Memo>().also{
-            val sql = """
+            val fetchSql = """
                 SELECT id, isbn, title, contents, updated_at 
                 FROM Memo
                 WHERE isbn = ?
-                ORDER BY updated_at ASC
+                ORDER BY updated_at DESC
                 """.trimIndent()
-            val vals = arrayOf(intent.getLongExtra("isbn", 0L).toString())
+            val fetchParams = arrayOf(intent.getLongExtra("isbn", 0L).toString())
 
-            val cursor = database.rawQuery(sql, vals)
+            val cursor = database.rawQuery(fetchSql, fetchParams)
             while(cursor.moveToNext()){
                 it.add(Memo(
                     cursor.getLong(0),      // id
@@ -67,9 +67,9 @@ class MemoListActivity : AppCompatActivity() {
                 it.putExtra("action", "read")
                 it.putExtra("id", selectedMemo.id)
                 it.putExtra("isbn", selectedMemo.isbn)
-                it.putExtra("title", selectedMemo.title)
-                it.putExtra("contents", selectedMemo.contents)
-                it.putExtra("updated_at", selectedMemo.updated_at)
+//                it.putExtra("title", selectedMemo.title)
+//                it.putExtra("contents", selectedMemo.contents)
+//                it.putExtra("updated_at", selectedMemo.updated_at)
             }
             reloadLauncher.launch(intent)
         }

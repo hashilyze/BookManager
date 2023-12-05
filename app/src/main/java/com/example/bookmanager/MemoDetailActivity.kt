@@ -3,7 +3,6 @@ package com.example.bookmanager
 import android.database.sqlite.SQLiteDatabase
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.text.Editable
 import android.util.Log
 import android.view.View
 import android.widget.Toast
@@ -92,7 +91,8 @@ class MemoDetailActivity : AppCompatActivity() {
                 val updateSql = """
                     UPDATE Memo SET
                         title = ?,
-                        contents = ?
+                        contents = ?,
+                        updated_at = datetime('now','localtime')
                     WHERE id = ?
                 """.trimIndent()
                 val updateParams = arrayOf(

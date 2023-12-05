@@ -25,10 +25,10 @@ class DBHelper(context: Context?) : SQLiteOpenHelper(context, "BookManager.db", 
                 isbn INTEGER,
                 title TEXT NOT NULL default '',
                 contents TEXT NOT NULL default '',
-                updated_at TEXT NOT NULL default(date('now','localtime'))
+                updated_at TEXT NOT NULL default(datetime('now','localtime')),
+                FOREIGN KEY(isbn) REFERENCES Book(isbn) ON DELETE CASCADE ON UPDATE CASCADE
             );
         """.trimIndent()
-
         db.execSQL(bookSql)
         db.execSQL(memoSql)
         Log.d("BookManager", "Created Database")
@@ -42,6 +42,11 @@ class DBHelper(context: Context?) : SQLiteOpenHelper(context, "BookManager.db", 
         db.execSQL(memoSql)
         onCreate(db)
         Log.d("BookManager", "Updated Database")
+    }
+
+    override fun onOpen(db: SQLiteDatabase?) {
+        super.onOpen(db)
+        db?.execSQL("PRAGMA foreign_keys=ON")
     }
 
 }
