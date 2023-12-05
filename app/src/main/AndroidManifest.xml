@@ -15,6 +15,9 @@
         android:theme="@style/Theme.BookManager"
         tools:targetApi="31">
         <activity
+            android:name=".MemoDetailActivity"
+            android:exported="false" />
+        <activity
             android:name=".MemoListActivity"
             android:exported="false" />
         <activity

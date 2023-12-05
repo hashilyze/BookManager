@@ -27,8 +27,13 @@ class MemoListActivity : AppCompatActivity() {
 
         // 뒤로가기
         binding.btnBack.setOnClickListener{ finish() }
-        // 메모 편집 화면으로 이동
-        binding.btnMemoAdd.setOnClickListener{}
+        // 메모 등록 화면으로 이동
+        binding.btnMemoAdd.setOnClickListener{
+            val editIntent = Intent(this, MemoDetailActivity::class.java)
+            editIntent.putExtra("action", "write")
+            editIntent.putExtra("isbn", intent.getLongExtra("isbn", 0L))
+            reloadLauncher.launch(editIntent)
+        }
         loadLibrary()
     }
 
@@ -38,6 +43,7 @@ class MemoListActivity : AppCompatActivity() {
                 SELECT id, isbn, title, contents, updated_at 
                 FROM Memo
                 WHERE isbn = ?
+                ORDER BY updated_at ASC
                 """.trimIndent()
             val vals = arrayOf(intent.getLongExtra("isbn", 0L).toString())
 
@@ -57,7 +63,8 @@ class MemoListActivity : AppCompatActivity() {
         binding.memolist.onItemClickListener = AdapterView.OnItemClickListener{
                 parent, view, position, id ->
             val selectedMemo = parent.getItemAtPosition(position) as Memo
-            var intent = Intent(this@MemoListActivity, null).also{
+            var intent = Intent(this@MemoListActivity, MemoDetailActivity::class.java).also{
+                it.putExtra("action", "read")
                 it.putExtra("id", selectedMemo.id)
                 it.putExtra("isbn", selectedMemo.isbn)
                 it.putExtra("title", selectedMemo.title)
