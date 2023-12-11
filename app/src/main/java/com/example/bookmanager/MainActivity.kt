@@ -57,7 +57,7 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        binding.booklist.adapter = BookMgrAdapter(this, bookList)
+        binding.booklist.adapter = BookInfoAdapter(this, bookList)
         binding.booklist.onItemClickListener = AdapterView.OnItemClickListener {
                 parent, view, position, id ->
             val selectedBook = parent.getItemAtPosition(position) as Book
